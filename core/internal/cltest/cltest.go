@@ -38,7 +38,6 @@ import (
 	"github.com/smartcontractkit/chainlink/core/services/bulletprooftxmanager"
 	"github.com/smartcontractkit/chainlink/core/services/chainlink"
 	"github.com/smartcontractkit/chainlink/core/services/eth"
-	"github.com/smartcontractkit/chainlink/core/services/eth/contracts"
 	"github.com/smartcontractkit/chainlink/core/services/pipeline"
 	"github.com/smartcontractkit/chainlink/core/services/postgres"
 	strpkg "github.com/smartcontractkit/chainlink/core/store"
@@ -1574,7 +1573,7 @@ func MakeRoundStateReturnData(
 	return data
 }
 
-var fluxAggregatorABI = contracts.MustGetABI(flux_aggregator_wrapper.FluxAggregatorABI)
+var fluxAggregatorABI = eth.MustGetABI(flux_aggregator_wrapper.FluxAggregatorABI)
 
 func MockFluxAggCall(client *mocks.GethClient, address common.Address, funcName string) *mock.Call {
 	funcSig := hexutil.Encode(fluxAggregatorABI.Methods[funcName].ID)
