@@ -105,7 +105,7 @@ func TestPostgresLockingStrategy_WhenLostIsReacquired(t *testing.T) {
 	delay := store.Config.DatabaseTimeout()
 
 	// NewStore no longer takes a lock on opening, so do something that does...
-	err := store.ORM.RawDB(func(db *gorm.DB) error {
+	err := store.ORM.RawDBWithAdvisoryLock(func(db *gorm.DB) error {
 		return db.Save(&models.JobSpec{ID: models.NewID()}).Error
 	})
 	require.NoError(t, err)
@@ -114,7 +114,7 @@ func TestPostgresLockingStrategy_WhenLostIsReacquired(t *testing.T) {
 	require.NoError(t, connErr)
 	require.NoError(t, dbErr)
 
-	err = store.ORM.RawDB(func(db *gorm.DB) error {
+	err = store.ORM.RawDBWithAdvisoryLock(func(db *gorm.DB) error {
 		return db.Save(&models.JobSpec{ID: models.NewID()}).Error
 	})
 	require.NoError(t, err)
@@ -135,7 +135,7 @@ func TestPostgresLockingStrategy_CanBeReacquiredByNewNodeAfterDisconnect(t *test
 	defer cleanup()
 
 	// NewStore no longer takes a lock on opening, so do something that does...
-	err := store.ORM.RawDB(func(db *gorm.DB) error {
+	err := store.ORM.RawDBWithAdvisoryLock(func(db *gorm.DB) error {
 		return db.Save(&models.JobSpec{ID: models.NewID()}).Error
 	})
 	require.NoError(t, err)
@@ -149,12 +149,12 @@ func TestPostgresLockingStrategy_CanBeReacquiredByNewNodeAfterDisconnect(t *test
 	require.NoError(t, err)
 	defer orm2.Close()
 
-	err = orm2.RawDB(func(db *gorm.DB) error {
+	err = orm2.RawDBWithAdvisoryLock(func(db *gorm.DB) error {
 		return db.Save(&models.JobSpec{ID: models.NewID()}).Error
 	})
 	require.NoError(t, err)
 
-	_ = store.ORM.RawDB(func(db *gorm.DB) error { return nil })
+	_ = store.ORM.RawDBWithAdvisoryLock(func(db *gorm.DB) error { return nil })
 	gomega.NewGomegaWithT(t).Eventually(store.ORM.ShutdownSignal().Wait()).Should(gomega.BeClosed())
 }
 
@@ -167,7 +167,7 @@ func TestPostgresLockingStrategy_WhenReacquiredOriginalNodeErrors(t *testing.T) 
 	delay := store.Config.DatabaseTimeout()
 
 	// NewStore no longer takes a lock on opening, so do something that does...
-	err := store.ORM.RawDB(func(db *gorm.DB) error {
+	err := store.ORM.RawDBWithAdvisoryLock(func(db *gorm.DB) error {
 		return db.Save(&models.JobSpec{ID: models.NewID()}).Error
 	})
 	require.NoError(t, err)
@@ -186,6 +186,6 @@ func TestPostgresLockingStrategy_WhenReacquiredOriginalNodeErrors(t *testing.T) 
 	require.NoError(t, err)
 	defer lock.Unlock(delay)
 
-	_ = store.ORM.RawDB(func(db *gorm.DB) error { return nil })
+	_ = store.ORM.RawDBWithAdvisoryLock(func(db *gorm.DB) error { return nil })
 	gomega.NewGomegaWithT(t).Eventually(store.ORM.ShutdownSignal().Wait()).Should(gomega.BeClosed())
 }
